@@ -63,27 +63,85 @@ class Individual_Grid(object):
         return self._fitness
 
     # Mutate a genome into a new genome.  Note that this is a _genome_, not an individual!
+    """ Loops through each tile possibly replacing it"""
     def mutate(self, genome):
         # STUDENT implement a mutation operator, also consider not mutating this individual
         # STUDENT also consider weighting the different tile types so it's not uniformly random
         # STUDENT consider putting more constraints on this to prevent pipes in the air, etc
 
+        randomGen = random.seed()
+
+        #Current: 10% chance to replace any given tile with one of the tiles below,
+        #as long as the given tile is not a pipe
+        tiles = ['-', 'X', '?', 'M', 'B', 'o']
+        chance_replace = 0.1
+
         left = 1
         right = width - 1
         for y in range(height):
             for x in range(left, right):
-                pass
+                '''Correct pipes with no proper top'''
+                #If space above genome[x][y] is valid and is not T or |
+                    #if genomexy is |
+                        #genomexy = T
+                        #break
+                '''Correct pipes with invalid blocks in the middle of them
+                (That were not already corrected by generate_children())'''
+                #else If space above genome[x][y] is valid and is T or |,
+                    #if genomexy is not X, or |:
+                        #genomexy = X
+                        # (Doing X would mean pipes can be on ground that
+                        # is in midair. Doing | means that unless generated
+                        # that way, all pipes will go towards the ground)
+                        #break
+
+                new_roll = randomGen.randrange(1.0)
+                if chance_replace < new_roll and genome[x][y] != 'T' and genome[x][y] != '|':
+                    genome[x][y] = random.choice(tiles)
         return genome
 
     # Create zero or more children from self and other
+    """ Does this by looping through every tile in the level.txt, going up(?) row by row
+    choose to take self's tile or other's tile for the new child
+    
+    uniform = choose one or the other with bias
+    point = pick position(s) in genome and only take one parent's, then switch to 
+            other upon reaching the next point
+    
+    Can produce up two two children? I don't get it but my guess is...
+    0 = Child ended up being exact same as parent and is thus discarded
+    1 = Created a child based on some slections
+    2 = The opposite of child 1, the 'leftovers'
+
+    Roulette Wheel Selection: Randomly select an individual, with their
+        fitness value representing their chance to be selected, out of
+        the total population (Imaging a wheel with more fitness meaning
+        you get a bigger slice of said wheel)
+    Elitist Selection
+    """
     def generate_children(self, other):
         new_genome = copy.deepcopy(self.genome)
         # Leaving first and last columns alone...
         # do crossover with other
+
+        #total fitness = self.fitness + other.fitness
+
         left = 1
         right = width - 1
         for y in range(height):
             for x in range(left, right):
+
+                #If positon above is valid and position above is a 'T' or 'I'
+                    #if current position is air or breakable block or enemy:
+                        #if other.position is a 'I' or 'T'
+                            #new_genome.position = other.position
+                        #else if other.position is solid
+                            #new_genome.position = other.position
+                        #else:
+                            #child is invalid OR new_genome.poosition = 'I'
+
+                new_genome[x][y] = random.choice([self.genome[x][y], other.genome[x][y]])
+
                 # STUDENT Which one should you take?  Self, or other?  Why?
                 # STUDENT consider putting more constraints on this to prevent pipes in the air, etc
                 pass
@@ -343,11 +401,67 @@ class Individual_DE(object):
 Individual = Individual_Grid
 
 
+""""""
 def generate_successors(population):
+    rangen = random.seed()
     results = []
     # STUDENT Design and implement this
     # Hint: Call generate_children() on some individuals and fill up results.
-    return results
+    
+    total_successors = math.floor(population.size()/2)
+    fitness_values = {}
+    fitness_values_roulette = []
+    total_fitness = 0
+
+    #Put each individual in the 
+    for individual in population:
+        indiv_fitness = Individual_Grid.calculate_fitness(individual)
+        total_fitness += indiv_fitness
+        fitness_values[individual] = indiv_fitness
+    
+    #Elitism slection (Top half)
+    fitness_values.sort(fitness_values.items(), key=lambda x: x[1], reverse=True)
+    #Get top half of individuals
+    i = 0
+    for individual in fitness_values.keys():
+        fitness_values_roulette += fitness_values[individual]
+        results += individual
+        i += 1
+        if i >total_successors:
+            break
+
+    total_successors = math.floor(total_successors/2)
+    #Roulette Selection(Random w/ fitness as weight)
+    results2 = rangen().choices(results, fitness_values_roulette, k=total_successors)
+
+    results3 = Individual_Grid.generate_children(results2)
+
+    '''
+    Two solutions mayb be good in some ways and bad in others,
+    combining these could lead to better one
+
+    Elitism = compare stats directly
+
+    1. Selection strats used to determine fitness of individuals, which ones
+       shall crossover to create children
+    2. Genome Crossover
+    - We call generate_children from one of (or both) of the encodings,
+      those being GRID and DE (Design Elements)
+    - We also might modify this func, or anything that has STUDENT on it
+    Mutations
+    - GRID and DE also each have a mutation function, which we might modify
+    - Call mutate() from generate_children(), probably
+
+
+    Can individuals have multiple genomes?
+    - No, each individual has one genome
+    '''
+
+    '''
+    Good mario level elements:
+
+    '''
+    return results3
 
 
 def ga():
