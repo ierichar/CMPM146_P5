@@ -69,12 +69,12 @@ class Individual_Grid(object):
         # STUDENT also consider weighting the different tile types so it's not uniformly random
         # STUDENT consider putting more constraints on this to prevent pipes in the air, etc
 
-        randomGen = random.seed()
+        #randomGen = random.seed()
 
         #Current: 10% chance to replace any given tile with one of the tiles below,
         #as long as the given tile is not a pipe
         tiles = ['-', 'X', '?', 'M', 'B', 'o']
-        chance_replace = 0.1
+        chance_replace = 0.05
 
         left = 1
         right = width - 1
@@ -94,10 +94,18 @@ class Individual_Grid(object):
                         # is in midair. Doing | means that unless generated
                         # that way, all pipes will go towards the ground)
                         #break
+                if y > 0 and self.genome[y-1][x] != "T" and self.genome[y-1][x] != "|":
+                    if self.genome[y][x] == "|":
+                        self.genome[y][x] = "T"
+                        break
+                elif y > 0 and self.genome[y-1][x] != "T" and self.genome[y-1][x] != "|":
+                    if self.genome[y][x] != "X" and self.genome[y][x] != "|":
+                        self.genome[y][x] = "X"
+                        break
 
-                new_roll = randomGen.randrange(1.0)
-                if chance_replace < new_roll and genome[x][y] != 'T' and genome[x][y] != '|':
-                    genome[x][y] = random.choice(tiles)
+                new_roll = random.randrange(1.0)
+                if chance_replace < new_roll and genome[y][x] != 'T' and genome[y][x] != '|':
+                    genome[y][x] = random.choice(tiles)
         return genome
 
     # Create zero or more children from self and other
@@ -140,7 +148,7 @@ class Individual_Grid(object):
                         #else:
                             #child is invalid OR new_genome.poosition = 'I'
 
-                new_genome[x][y] = random.choice([self.genome[x][y], other.genome[x][y]])
+                new_genome[y][x] = random.choice([self.genome[y][x], other.genome[y][x]])
 
                 # STUDENT Which one should you take?  Self, or other?  Why?
                 # STUDENT consider putting more constraints on this to prevent pipes in the air, etc
@@ -398,43 +406,52 @@ class Individual_DE(object):
         return Individual_DE(g)
 
 
-Individual = Individual_Grid
+Individual = Individual_DE
 
 
 """"""
 def generate_successors(population):
-    rangen = random.seed()
+    #rangen = random.seed()
     results = []
     # STUDENT Design and implement this
     # Hint: Call generate_children() on some individuals and fill up results.
     
-    total_successors = math.floor(population.size()/2)
+    total_successors = math.floor(len(population)/2)
     fitness_values = {}
     fitness_values_roulette = []
     total_fitness = 0
 
     #Put each individual in the 
     for individual in population:
-        indiv_fitness = Individual_Grid.calculate_fitness(individual)
-        total_fitness += indiv_fitness
-        fitness_values[individual] = indiv_fitness
+        indiv_fitness = Individual.calculate_fitness(individual)
+        total_fitness += indiv_fitness.fitness()
+        fitness_values[individual] = indiv_fitness.fitness()
     
     #Elitism slection (Top half)
-    fitness_values.sort(fitness_values.items(), key=lambda x: x[1], reverse=True)
+    #fitness_values.sort(fitness_values.items(), key=lambda x: x[1], reverse=True)
+
+    sorted_fitness_list = sorted(fitness_values.items(), key=lambda x: x[1], reverse=True)
+    sorted_fitness_dict = dict(sorted_fitness_list)
+
     #Get top half of individuals
     i = 0
-    for individual in fitness_values.keys():
-        fitness_values_roulette += fitness_values[individual]
-        results += individual
+    for individual in sorted_fitness_dict.keys():
+        fitness_values_roulette.append(sorted_fitness_dict[individual])
+        results.append(individual)
         i += 1
         if i >total_successors:
             break
 
     total_successors = math.floor(total_successors/2)
     #Roulette Selection(Random w/ fitness as weight)
-    results2 = rangen().choices(results, fitness_values_roulette, k=total_successors)
+    results2 = random.choices(results, fitness_values_roulette, k=total_successors)
 
-    results3 = Individual_Grid.generate_children(results2)
+    results3 = []
+
+    for child1 in results2:
+        for child2 in results2[results2.index(child1):]:
+            results3.append(Individual.generate_children(child1, child2))
+    
 
     '''
     Two solutions mayb be good in some ways and bad in others,
@@ -530,6 +547,6 @@ if __name__ == "__main__":
     now = time.strftime("%m_%d_%H_%M_%S")
     # STUDENT You can change this if you want to blast out the whole generation, or ten random samples, or...
     for k in range(0, 10):
-        with open("levels/" + now + "_" + str(k) + ".txt", 'w') as f:
+        with open("levels/" + now + "_" + str(k) + ".txt", 'x') as f:
             for row in final_gen[k].to_level():
                 f.write("".join(row) + "\n")
