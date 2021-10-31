@@ -94,13 +94,13 @@ class Individual_Grid(object):
                         # is in midair. Doing | means that unless generated
                         # that way, all pipes will go towards the ground)
                         #break
-                if y > 0 and self.genome[y-1][x] != "T" and self.genome[y-1][x] != "|":
-                    if self.genome[y][x] == "|":
-                        self.genome[y][x] = "T"
+                if y > 0 and genome[y-1][x] != "T" and genome[y-1][x] != "|":
+                    if genome[y][x] == "|":
+                        genome[y][x] = "T"
                         break
-                elif y > 0 and self.genome[y-1][x] != "T" and self.genome[y-1][x] != "|":
-                    if self.genome[y][x] != "X" and self.genome[y][x] != "|":
-                        self.genome[y][x] = "X"
+                elif y > 0 and genome[y-1][x] != "T" and genome[y-1][x] != "|":
+                    if genome[y][x] != "X" and genome[y][x] != "|":
+                        genome[y][x] = "X"
                         break
 
                 new_roll = random.randrange(1.0)
@@ -154,6 +154,8 @@ class Individual_Grid(object):
                 # STUDENT consider putting more constraints on this to prevent pipes in the air, etc
                 pass
         # do mutation; note we're returning a one-element tuple here
+        self.mutate(self, new_genome)
+
         return (Individual_Grid(new_genome),)
 
     # Turn the genome into a level string (easy for this genome)
@@ -406,11 +408,12 @@ class Individual_DE(object):
         return Individual_DE(g)
 
 
-Individual = Individual_DE
+Individual = Individual_Grid
 
 
 """"""
 def generate_successors(population):
+    print("Generating successors")
     #rangen = random.seed()
     results = []
     # STUDENT Design and implement this
@@ -441,16 +444,19 @@ def generate_successors(population):
         i += 1
         if i >total_successors:
             break
+    print("Performed elitism selection")
 
     total_successors = math.floor(total_successors/2)
     #Roulette Selection(Random w/ fitness as weight)
     results2 = random.choices(results, fitness_values_roulette, k=total_successors)
+    print("Performed roulette selection")
 
     results3 = []
 
     for child1 in results2:
-        for child2 in results2[results2.index(child1):]:
-            results3.append(Individual.generate_children(child1, child2))
+        for child2 in results2[results2.index(child1):len(results2)]:
+            new_individual = Individual.generate_children(child1, child2)
+            results3.append(new_individual[0]) #Access tuple
     
 
     '''
@@ -478,6 +484,7 @@ def generate_successors(population):
     Good mario level elements:
 
     '''
+    print("Got successors")
     return results3
 
 
