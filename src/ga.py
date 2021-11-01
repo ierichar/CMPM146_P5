@@ -104,7 +104,7 @@ class Individual_Grid(object):
                         break
 
                 new_roll = random.randrange(1.0)
-                if chance_replace < new_roll and genome[y][x] != 'T' and genome[y][x] != '|':
+                if chance_replace > new_roll and genome[y][x] != 'T' and genome[y][x] != '|':
                     genome[y][x] = random.choice(tiles)
         return genome
 
@@ -450,23 +450,23 @@ def generate_successors(population):
     #Roulette Selection(Random w/ fitness as weight)
     results2 = []
 
-    for i in total_successors:
+    print(total_successors)
+    for j in range(total_successors):
         choice = random.choices(results, fitness_values_roulette, k=1)[0]
         results2.append(choice)
         choice_index = results.index(choice)
         results.remove(results[choice_index])
-        fitness_values_roulette.remove[fitness_values_roulette[choice_index]]
+        fitness_values_roulette.remove(fitness_values_roulette[choice_index])
         #results2 = random.choices(results, fitness_values_roulette, k=total_successors)
     print("Performed roulette selection")
-
     results3 = []
 
     for parent1 in results2:
         for parent2 in results2:
             if (parent1 != parent2):
-                print("calling generate_children...")
+                #print("calling generate_children...")
                 new_individual = Individual.generate_children(parent1, parent2)
-                print("stepping out of generate_children...")
+                #print("stepping out of generate_children...")
                 results3.append(new_individual[0]) #Access tuple
     
 
@@ -501,7 +501,7 @@ def generate_successors(population):
 
 def ga():
     # STUDENT Feel free to play with this parameter
-    pop_limit = 480
+    pop_limit = 20
     # Code to parallelize some computations
     batches = os.cpu_count()
     if pop_limit % batches != 0:
