@@ -451,8 +451,11 @@ def generate_successors(population):
     results2 = []
 
     for i in total_successors:
-        results2.append(random.choices(results, fitness_values_roulette, k=1)[0])
-        individual_index = results
+        choice = random.choices(results, fitness_values_roulette, k=1)[0]
+        results2.append(choice)
+        choice_index = results.index(choice)
+        results.remove(results[choice_index])
+        fitness_values_roulette.remove[fitness_values_roulette[choice_index]]
         #results2 = random.choices(results, fitness_values_roulette, k=total_successors)
     print("Performed roulette selection")
 
