@@ -154,7 +154,7 @@ class Individual_Grid(object):
                 # STUDENT consider putting more constraints on this to prevent pipes in the air, etc
                 pass
         # do mutation; note we're returning a one-element tuple here
-        self.mutate(self, new_genome)
+        self.mutate(new_genome)
 
         return (Individual_Grid(new_genome),)
 
@@ -448,15 +448,23 @@ def generate_successors(population):
 
     total_successors = math.floor(total_successors/2)
     #Roulette Selection(Random w/ fitness as weight)
-    results2 = random.choices(results, fitness_values_roulette, k=total_successors)
+    results2 = []
+
+    for i in total_successors:
+        results2.append(random.choices(results, fitness_values_roulette, k=1)[0])
+        individual_index = results
+        #results2 = random.choices(results, fitness_values_roulette, k=total_successors)
     print("Performed roulette selection")
 
     results3 = []
 
-    for child1 in results2:
-        for child2 in results2[results2.index(child1):len(results2)]:
-            new_individual = Individual.generate_children(child1, child2)
-            results3.append(new_individual[0]) #Access tuple
+    for parent1 in results2:
+        for parent2 in results2:
+            if (parent1 != parent2):
+                print("calling generate_children...")
+                new_individual = Individual.generate_children(parent1, parent2)
+                print("stepping out of generate_children...")
+                results3.append(new_individual[0]) #Access tuple
     
 
     '''
